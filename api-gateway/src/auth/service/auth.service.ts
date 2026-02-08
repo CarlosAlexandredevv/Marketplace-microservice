@@ -1,6 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { JwtService } from '@nestjs/jwt';
+
+export interface UserSession {
+  valid: boolean;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    status: string;
+  } | null;
+}
 
 @Injectable()
 export class AuthService {
@@ -9,8 +21,15 @@ export class AuthService {
     private readonly httpService: HttpService,
   ) {}
 
-  validadeJwtToken() {}
-  validadeSessionToken() {}
+  validadeJwtToken(token: string): Promise<any> {
+    try {
+      const decoded = this.jwtService.verify(token);
+      return decoded;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token', error);
+    }
+  }
+  validadeSessionToken(sessionToken: string): Promise<UserSession> {}
   login() {}
   register() {}
 }
