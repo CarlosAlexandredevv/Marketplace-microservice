@@ -3,6 +3,8 @@ import { HttpService } from '@nestjs/axios';
 import { JwtService } from '@nestjs/jwt';
 import { firstValueFrom } from 'rxjs';
 import { serviceConfig } from 'src/config/gateway.config';
+import { LoginDto } from '../dtos/login.dto';
+import { RegisterDto } from '../dtos/register.dto';
 
 export interface UserSession {
   valid: boolean;
@@ -26,7 +28,7 @@ export class AuthService {
   validateJwtToken(token: string): Promise<any> {
     try {
       return this.jwtService.verify(token);
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid JWT token');
     }
   }
@@ -41,12 +43,12 @@ export class AuthService {
       );
 
       return data;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid session token');
     }
   }
 
-  async login(loginDto: { email: string; password: string }) {
+  async login(loginDto: LoginDto) {
     try {
       const { data } = await firstValueFrom(
         this.httpService.post(`${serviceConfig.users.url}/login`, loginDto, {
@@ -55,12 +57,12 @@ export class AuthService {
       );
 
       return data;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid login credentials');
     }
   }
 
-  async register(registerDto: any) {
+  async register(registerDto: RegisterDto) {
     try {
       const { data } = await firstValueFrom(
         this.httpService.post(
@@ -71,7 +73,7 @@ export class AuthService {
       );
 
       return data;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Registration failed');
     }
   }

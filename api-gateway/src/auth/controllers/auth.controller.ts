@@ -2,6 +2,8 @@ import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from '../service/auth.service';
 import { Throttle } from '@nestjs/throttler';
+import { LoginDto } from '../dtos/login.dto';
+import { RegisterDto } from '../dtos/register.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -20,7 +22,7 @@ export class AuthController {
     description: 'Invalid credentials',
   })
   @Throttle({ short: { limit: 5, ttl: 60000 } })
-  async login(@Body() loginDto: { email: string; password: string }) {
+  async login(@Body() loginDto: LoginDto) {
     return await this.authService.login(loginDto);
   }
 
@@ -36,7 +38,7 @@ export class AuthController {
     description: 'Invalid registration data',
   })
   @Throttle({ medium: { limit: 3, ttl: 60000 } })
-  async register(@Body() registerDto: any) {
+  async register(@Body() registerDto: RegisterDto) {
     return await this.authService.register(registerDto);
   }
 }
