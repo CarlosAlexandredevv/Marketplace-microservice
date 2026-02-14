@@ -46,7 +46,7 @@ export class CircuitBreakerService {
       this.onSuccess(circuit, key);
 
       return result;
-    } catch (error: unknown) {
+    } catch (error) {
       this.onFailure(circuit, key, options);
       this.logger.error(
         `Circuit breaker failure for ${key}:`,
