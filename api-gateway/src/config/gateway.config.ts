@@ -11,7 +11,7 @@ export const serviceConfig = {
     url: process.env.CHECKOUT_SERVICE_URL ?? 'http://localhost:3003',
     timeout: 10000, // 10 seconds
   },
-  payment: {
+  payments: {
     url: process.env.PAYMENT_SERVICE_URL ?? 'http://localhost:3004',
     timeout: 10000, // 10 seconds
   },

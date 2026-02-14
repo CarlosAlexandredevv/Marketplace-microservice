@@ -76,4 +76,42 @@ export class HealthCheckService {
       return serviceHealth;
     }
   }
+
+  async checkAllServices(): Promise<ServiceHealth[]> {
+    const services: (keyof typeof serviceConfig)[] = [
+      'users',
+      'products',
+      'checkout',
+      'payments',
+    ];
+
+    const healthChecks = await Promise.allSettled(
+      services.map((serviceName) => this.checkServiceHealth(serviceName)),
+    );
+
+    return healthChecks.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      } else {
+        return {
+          name: services[index],
+          url: serviceConfig[services[index]].url,
+          status: HealthStatus.UNHEALTHY,
+          responseTime: 0,
+          lastCheck: new Date(),
+          error: new Error(
+            (result.reason as Error)?.message || 'Unknown error',
+          ),
+        };
+      }
+    });
+  }
+
+  getCachedHealth(serviceName: string): ServiceHealth | undefined {
+    return this.healthCache.get(serviceName);
+  }
+
+  getAllCachedHealth(): ServiceHealth[] {
+    return Array.from(this.healthCache.values());
+  }
 }

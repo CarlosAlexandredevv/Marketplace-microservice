@@ -23,7 +23,7 @@ export class AppController {
         users: await this.proxyService.getServiceHealth('users'),
         products: await this.proxyService.getServiceHealth('products'),
         checkout: await this.proxyService.getServiceHealth('checkout'),
-        payment: await this.proxyService.getServiceHealth('payment'),
+        payments: await this.proxyService.getServiceHealth('payments'),
       },
     };
   }
