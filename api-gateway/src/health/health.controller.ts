@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import type { HealthService } from './health.service';
-import type { HealthCheckService } from 'src/common/health/health-check.service';
+import { HealthService } from './health.service';
+import { HealthCheckService } from 'src/common/health/health-check.service';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HealthStatus } from 'src/common/health/health-check.interface';
 
@@ -14,7 +14,7 @@ export class HealthController {
   @Get()
   @ApiOperation({ summary: 'Health check do gateway' })
   @ApiResponse({ status: 200, description: 'Gateway está saudável' })
-  async getHealth() {
+  getHealth() {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
@@ -57,7 +57,7 @@ export class HealthController {
   @Get('services/:serviceName')
   @ApiOperation({ summary: 'Health check de um serviço específico' })
   @ApiResponse({ status: 200, description: 'Status do serviço' })
-  async getServiceHealth(@Param('serviceName') serviceName: string) {
+  getServiceHealth(@Param('serviceName') serviceName: string) {
     const cached = this.healthCheckService.getCachedHealth(serviceName);
 
     if (!cached) {
@@ -78,7 +78,7 @@ export class HealthController {
     description: 'Readiness status retrieved successfully',
   })
   async getReady() {
-    return this.healthService.getReadyStatus();
+    return await this.healthService.getReadyStatus();
   }
 
   @Get('live')
@@ -87,7 +87,7 @@ export class HealthController {
     status: 200,
     description: 'Liveness status retrieved successfully',
   })
-  async getLive() {
+  getLive() {
     return this.healthService.getLiveStatus();
   }
 }
