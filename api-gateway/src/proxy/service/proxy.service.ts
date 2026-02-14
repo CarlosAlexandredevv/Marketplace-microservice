@@ -38,7 +38,8 @@ export class ProxyService {
 
     this.logger.log(`Proxying ${method} request to ${serviceName}: ${url}`);
 
-    const fallback = this.createServiceFallback(serviceName, method, path);
+    const fallbackFn = this.createServiceFallback(serviceName, method, path);
+    const fallback = () => Promise.resolve().then(() => fallbackFn());
 
     return this.circuitBreakerService.executeWithCircuitBreaker(
       async () => {
