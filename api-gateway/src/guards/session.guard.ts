@@ -5,13 +5,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/service/auth.service';
+import { Request } from 'express';
 
 @Injectable()
 export class SessionGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
 
     const sessionToken = request.headers['x-session-token'];
 
@@ -20,7 +21,9 @@ export class SessionGuard implements CanActivate {
     }
 
     try {
-      const session = await this.authService.validateSessionToken(sessionToken);
+      const session = await this.authService.validateSessionToken(
+        sessionToken as string,
+      );
 
       if (!session.valid || !session.user) {
         throw new UnauthorizedException('Invalid session token');
