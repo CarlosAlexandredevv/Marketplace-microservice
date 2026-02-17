@@ -119,6 +119,7 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
       this.logger.error('❌ Error publishing message to RabbitMQ:', error);
     }
   }
+
   async subscribeToQueue(
     queueName: string,
     exchange: string,
