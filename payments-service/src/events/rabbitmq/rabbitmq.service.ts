@@ -175,4 +175,17 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`❌ Error subscribing to queue ${queueName}:`, error);
     }
   }
+
+  async waitForConnection(maxAttempts = 10, delayMs = 500): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (this.channel) {
+        return true;
+      }
+      this.logger.log(
+        `⏳ Waiting for RabbitMQ connection... (attempt ${attempt}/${maxAttempts})`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    return false;
+  }
 }
