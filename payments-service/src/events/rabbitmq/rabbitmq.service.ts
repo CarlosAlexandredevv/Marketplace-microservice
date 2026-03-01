@@ -23,6 +23,19 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     await this.disconnect();
   }
 
+  async waitForConnection(maxAttempts = 10, delayMs = 500): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (this.channel) {
+        return true;
+      }
+      this.logger.log(
+        `⏳ Waiting for RabbitMQ connection... (attempt ${attempt}/${maxAttempts})`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    return false;
+  }
+
   private async connect() {
     try {
       const rabbitmqUrl = this.configService.get<string>(
@@ -53,7 +66,7 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     } catch (error) {
       this.logger.warn(
         '⚠️ Failed to connect to RabbitMQ, cotinuing wihout message queue:',
-        (error as Error).message || error,
+        error instanceof Error ? error.message : String(error),
       );
     }
   }
@@ -125,7 +138,14 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     exchange: string,
     routingKey: string,
     callback: (message: unknown) => Promise<void>,
+    options: {
+      maxRetries?: number; // Máximo de tentativas (padrão: 3)
+      retryDelayMs?: number; // Delay entre retries (padrão: 30000ms)
+    } = {},
   ): Promise<void> {
+    const maxRetries = options.maxRetries ?? 3;
+    const retryDelayMs = options.retryDelayMs ?? 30000; // 30 segundos
+
     try {
       if (!this.channel) {
         throw new Error('RabbitMQ channel not available');
@@ -135,10 +155,17 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
         durable: true,
       });
 
-      const dlxExchange = `${queueName}.dlx`;
+      const retryExchange = `${exchange}.retry.dlx`;
+      await this.channel.assertExchange(retryExchange, 'topic', {
+        durable: true,
+      });
+
+      const dlxExchange = `${exchange}.dlx`;
       await this.channel.assertExchange(dlxExchange, 'topic', {
         durable: true,
       });
+
+      // DLQ
 
       const dlqName = `${queueName}.dlq`;
       await this.channel.assertQueue(dlqName, {
@@ -149,16 +176,37 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
       });
 
       const routingKeyDlq = `${routingKey}.dlq`;
-
       await this.channel.bindQueue(dlqName, dlxExchange, routingKeyDlq);
+
+      // Retry
+
+      const routingKeyRetry = `${routingKey}.retry`;
+
+      const retryQueueName = `${queueName}.retry`;
+      await this.channel.assertQueue(retryQueueName, {
+        durable: true,
+        arguments: {
+          'x-message-ttl': retryDelayMs, // Tempo de espera antes do retry
+          // Quando TTL expira, volta para o exchange PRINCIPAL
+          'x-dead-letter-exchange': exchange,
+          'x-dead-letter-routing-key': routingKey,
+        },
+      });
+      await this.channel.bindQueue(
+        retryQueueName,
+        retryExchange,
+        routingKeyRetry,
+      );
+
+      // Main queue
 
       const queue = await this.channel.assertQueue(queueName, {
         durable: true,
         arguments: {
           'x-message-ttl': 86400000,
           'x-max-length': 10000,
-          'x-dead-letter-exchange': dlxExchange,
-          'x-dead-letter-routing-key': routingKeyDlq,
+          'x-dead-letter-exchange': retryExchange,
+          'x-dead-letter-routing-key': routingKeyRetry,
         },
       });
 
@@ -173,6 +221,13 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
             const message: unknown = JSON.parse(msg.content.toString());
             this.logger.log(`📨 Message received from queue: ${queueName}`);
             this.logger.debug(`Message content: ${JSON.stringify(message)}`);
+
+            const retryCount = this.getRetryCount(msg);
+
+            this.logger.log(
+              `📨 Message received (attempt ${retryCount + 1}/${maxRetries + 1})`,
+            );
+
             await callback(message);
 
             this.channel.ack(msg);
@@ -180,32 +235,76 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
             this.logger.log(
               `✅ Message processed succesfully from queue: ${queueName}`,
             );
-          } catch (error) {
-            this.logger.error(`❌ Error processing message:`, error);
-            this.channel.nack(msg, false, false);
-            this.logger.warn(`🔥 Message sent to DLQ: ${dlqName}`);
+          } catch {
+            const retryCount = this.getRetryCount(msg);
+            if (retryCount < maxRetries) {
+              this.logger.warn(
+                `⚠️ Processing failed (attempt ${retryCount + 1}/${maxRetries + 1}). ` +
+                  `Retrying in ${retryDelayMs / 1000}s...`,
+              );
+              this.channel.nack(msg, false, false);
+            } else {
+              this.logger.error(
+                `💀 Max retries (${maxRetries}) exceeded. Sending to DLQ.`,
+              );
+              // Publica diretamente na DLQ (bypass da retry queue)
+              this.channel.publish(
+                dlxExchange,
+                `${routingKey}.dlq`,
+                msg.content,
+                { persistent: true, headers: msg.properties.headers },
+              );
+              this.channel.ack(msg); // Remove da fila principal
+            }
           }
         }
       });
 
+      this.logger.log(`✅ Subscribed to queue: ${queueName}`);
       this.logger.log(
-        `✅ Subscribed to queue: ${queueName} with routing key: ${routingKey}`,
+        `🔄 Retry queue: ${retryQueueName} (${retryDelayMs}ms delay)`,
       );
+      this.logger.log(`💀 Dead letter queue: ${dlqName}`);
     } catch (error) {
       this.logger.error(`❌ Error subscribing to queue ${queueName}:`, error);
     }
   }
 
-  async waitForConnection(maxAttempts = 10, delayMs = 500): Promise<boolean> {
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      if (this.channel) {
-        return true;
-      }
-      this.logger.log(
-        `⏳ Waiting for RabbitMQ connection... (attempt ${attempt}/${maxAttempts})`,
-      );
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+  /**
+   * Extrai o número de retries do header x-death
+   * O RabbitMQ adiciona esse header automaticamente
+   */
+  private getRetryCount(msg: amqp.ConsumeMessage): number {
+    const xDeath = msg.properties.headers?.['x-death'] as
+      | Array<{
+          count: number;
+          queue: string;
+        }>
+      | undefined;
+
+    if (!xDeath || xDeath.length === 0) {
+      return 0;
     }
-    return false;
+
+    // Soma todas as vezes que passou pela fila principal
+    return xDeath
+      .filter((death) => !death.queue.endsWith('.retry'))
+      .reduce((sum, death) => sum + (death.count || 0), 0);
   }
 }
+
+/*
+// Header x-death adicionado automaticamente pelo RabbitMQ
+{
+  "x-death": [
+    {
+      "count": 3,           // ← Número de vezes que foi rejeitada
+      "reason": "rejected",
+      "queue": "payment_queue",
+      "time": 1737241200,
+      "exchange": "payments.retry.dlx",
+      "routing-keys": ["payment.order.retry"]
+    }
+  ]
+}
+*/
