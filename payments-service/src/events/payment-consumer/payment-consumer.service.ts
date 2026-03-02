@@ -3,7 +3,7 @@ import { PaymentQueueService } from '../payment-queue/payment-queue.service';
 import { PaymentOrderMessage } from '../payment-queue.interface';
 import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
 import { validatePaymentOrderMessage } from './payment-message.validator';
-import { MetricsService } from 'src/metrics/services/metrics.service';
+import { MetricsService } from 'src/events/metrics/services/metrics.service';
 
 @Injectable()
 export class PaymentConsumerService implements OnModuleInit {
