@@ -2,8 +2,6 @@
 # Subir: docker compose up -d
 # Porta no host: 5433 -> 5432 no container
 
-version: "3.8"
-
 services:
   users-db:
     image: postgres:15
