@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config';
+import { EventsModule } from './events/events.module';
+import { MetricsModule } from './events/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -12,6 +14,8 @@ import { databaseConfig } from './config/database.config';
       envFilePath: '.env',
     }),
     TypeOrmModule.forRoot(databaseConfig),
+    EventsModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
