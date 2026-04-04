@@ -1,0 +1,27 @@
+# PostgreSQL dedicado ao users-service.
+# Subir: docker compose up -d
+# Porta no host: 5433 -> 5432 no container
+
+version: "3.8"
+
+services:
+  users-db:
+    image: postgres:15
+    container_name: users-db
+    environment:
+      POSTGRES_DB: users_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - users_db_data:/var/lib/postgresql/data
+    networks:
+      - users-network
+
+volumes:
+  users_db_data:
+
+networks:
+  users-network:
+    driver: bridge
