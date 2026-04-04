@@ -1,7 +1,3 @@
-# PostgreSQL dedicado ao users-service.
-# Subir: docker compose up -d
-# Porta no host: 5433 -> 5432 no container
-
 services:
   users-db:
     image: postgres:15

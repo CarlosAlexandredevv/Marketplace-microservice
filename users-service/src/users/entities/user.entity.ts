@@ -24,7 +24,6 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  /** Sempre armazenar hash; nunca texto plano. */
   @Column()
   password: string;
 
