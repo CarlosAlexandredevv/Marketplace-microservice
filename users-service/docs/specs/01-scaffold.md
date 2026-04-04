@@ -98,4 +98,4 @@ Demais serviços permanecem como hoje; futuras specs podem definir roteamento no
 
 ## 6. Commits
 
-Faça sempre um commit após cada implementação dessa spec.
+Faça sempre um commit após cada implementação dessa speec e futuras (Caso os testes passem).
