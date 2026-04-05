@@ -23,9 +23,10 @@ export class AuthController {
       type: 'object',
       properties: {
         user: { type: 'object' },
-        accessToken: { type: 'string' },
-        sessionToken: { type: 'string' },
-        expiresIn: { type: 'number' },
+        accessToken: {
+          type: 'string',
+          description: 'JWT para Authorization: Bearer',
+        },
       },
     },
   })

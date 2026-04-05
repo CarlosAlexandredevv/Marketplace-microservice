@@ -18,6 +18,25 @@ export interface UserSession {
   } | null;
 }
 
+interface UsersServiceLoginBody {
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    status?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+  token: string;
+}
+
+export interface LoginGatewayResponse {
+  accessToken: string;
+  user: UsersServiceLoginBody['user'];
+}
+
 export interface AuthResponse {
   access_token: string;
   user: {
@@ -59,11 +78,11 @@ export class AuthService {
     }
   }
 
-  async login(loginDto: LoginDto): Promise<AuthResponse> {
+  async login(loginDto: LoginDto): Promise<LoginGatewayResponse> {
     try {
       const { data } = await firstValueFrom(
-        this.httpService.post<AuthResponse>(
-          `${serviceConfig.users.url}/login`,
+        this.httpService.post<UsersServiceLoginBody>(
+          `${serviceConfig.users.url}/auth/login`,
           loginDto,
           {
             timeout: serviceConfig.users.timeout,
@@ -71,16 +90,21 @@ export class AuthService {
         ),
       );
 
-      return data;
+      return {
+        accessToken: data.token,
+        user: data.user,
+      };
     } catch {
       throw new UnauthorizedException('Invalid login credentials');
     }
   }
 
-  async register(registerDto: RegisterDto): Promise<AuthResponse> {
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<UsersServiceLoginBody['user']> {
     try {
       const { data } = await firstValueFrom(
-        this.httpService.post<AuthResponse>(
+        this.httpService.post<UsersServiceLoginBody['user']>(
           `${serviceConfig.users.url}/auth/register`,
           registerDto,
           { timeout: serviceConfig.users.timeout },
