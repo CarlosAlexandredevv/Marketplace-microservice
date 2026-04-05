@@ -12,7 +12,10 @@ export const serviceConfig = {
     timeout: 10000, // 10 seconds
   },
   payments: {
-    url: process.env.PAYMENT_SERVICE_URL ?? 'http://localhost:3004',
+    url:
+      process.env.PAYMENTS_SERVICE_URL ??
+      process.env.PAYMENT_SERVICE_URL ??
+      'http://localhost:3004',
     timeout: 10000, // 10 seconds
   },
 } as const;

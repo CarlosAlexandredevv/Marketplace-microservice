@@ -2,7 +2,7 @@
 
 ## Contexto
 
-O **users-service** é o microserviço responsável por persistência e gestão de dados de usuários do marketplace. Ele se integra ao ecossistema existente (api-gateway na porta 3005, checkout-service na porta 3003, payments-service na porta 3004, messaging-service com RabbitMQ), expondo a aplicação na **porta 3000**.
+O **users-service** é o microserviço responsável por persistência e gestão de dados de usuários do marketplace. Ele se integra ao ecossistema existente (api-gateway na porta 3005, **products-service** na porta 3001, checkout-service na porta 3003, payments-service na porta 3004, messaging-service com RabbitMQ nas portas 5672/15672), expondo a aplicação na **porta 3000**.
 
 Stack alvo: **NestJS**, **TypeORM**, **PostgreSQL 15**. O banco dedicado ao serviço deve subir via **Docker Compose**, host mapeado na **porta 5433**, base de dados **`users_db`**.
 
@@ -89,12 +89,21 @@ Variáveis adicionais (ex.: `NODE_ENV`) podem ser usadas para comportamento de d
 
 ## 5. Referência de posicionamento no ecossistema
 
-| Componente           | Porta / recurso |
-|----------------------|-----------------|
-| users-service (HTTP) | 3000            |
-| PostgreSQL (host)    | 5433 → `users_db` |
+| Componente            | Porta / recurso        |
+|-----------------------|------------------------|
+| users-service (HTTP)  | 3000                   |
+| products-service (HTTP) | 3001                 |
+| checkout-service (HTTP) | 3003                 |
+| payments-service (HTTP) | 3004                 |
+| api-gateway (HTTP)    | 3005                   |
+| PostgreSQL users (host) | 5433 → `users_db`    |
+| PostgreSQL checkout (host) | 5434 → `checkout_db` |
+| PostgreSQL payments (host) | 5435 → `payments_db` |
+| PostgreSQL products (host) | 5436 → `products_db` |
+| RabbitMQ AMQP         | 5672                   |
+| RabbitMQ Management   | 15672                  |
 
-Demais serviços permanecem como hoje; futuras specs podem definir roteamento no gateway e contratos de API.
+Futuras specs podem detalhar roteamento no gateway e contratos de API. Variável **`PAYMENTS_SERVICE_URL`** (e legado **`PAYMENT_SERVICE_URL`**) no gateway deve apontar para o payments-service na porta **3004**.
 
 ## 6. Commits
 
