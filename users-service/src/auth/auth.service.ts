@@ -4,7 +4,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
+import {
+  BCRYPT_ROUNDS,
+  comparePassword,
+  hashPassword,
+} from '../common/password.util';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UsersService } from '../users/users.service';
@@ -25,25 +29,6 @@ export type LoginResult = {
   user: PublicUser;
   token: string;
 };
-
-function hashPassword(plain: string, rounds: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    bcrypt.hash(plain, rounds, (err, hash) => {
-      if (err) reject(err);
-      else if (hash !== undefined) resolve(hash);
-      else reject(new Error('bcrypt.hash returned no hash'));
-    });
-  });
-}
-
-function comparePassword(plain: string, hash: string): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    bcrypt.compare(plain, hash, (err, same) => {
-      if (err) reject(err);
-      else resolve(same === true);
-    });
-  });
-}
 
 @Injectable()
 export class AuthService {
@@ -76,7 +61,7 @@ export class AuthService {
       throw new ConflictException('Este e-mail já está em uso.');
     }
 
-    const passwordHash = await hashPassword(dto.password, 10);
+    const passwordHash = await hashPassword(dto.password, BCRYPT_ROUNDS);
 
     const user = await this.usersService.create({
       email,

@@ -1,39 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User, UserRole, UserStatus } from './entities/user.entity';
+import { User } from './entities/user.entity';
+import { CreateUserInput, UsersRepository } from './users.repository';
 
-export type CreateUserInput = {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-  status: UserStatus;
-};
+export type { CreateUserInput } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private readonly usersRepository: Repository<User>,
-  ) {}
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   async existsByEmail(normalizedEmail: string): Promise<boolean> {
-    const found = await this.usersRepository.findOne({
-      where: { email: normalizedEmail },
-    });
-    return found !== null;
+    return this.usersRepository.existsByEmail(normalizedEmail);
   }
 
   async findByEmail(normalizedEmail: string): Promise<User | null> {
-    return this.usersRepository.findOne({
-      where: { email: normalizedEmail },
-    });
+    return this.usersRepository.findByEmail(normalizedEmail);
   }
 
   async create(data: CreateUserInput): Promise<User> {
-    const user = this.usersRepository.create(data);
-    return this.usersRepository.save(user);
+    return this.usersRepository.create(data);
   }
 }
