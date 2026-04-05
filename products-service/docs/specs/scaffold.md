@@ -18,7 +18,7 @@ Documento de requisitos para o esqueleto inicial do **products-service** no mono
    Incluir as bibliotecas necessárias para: persistência com TypeORM, driver PostgreSQL, carregamento de configuração a partir de ambiente/arquivo, e validação de DTOs (incluindo o que o ecossistema Nest costuma exigir em conjunto com `class-validator`).
 
 3. **Docker Compose**  
-   Definir um serviço de banco **PostgreSQL 15** dedicado ao products-service, com volume para dados e rede interna do compose. O banco lógico deve ser **`products_db`**. A porta **5434** no host deve mapear para a porta padrão do PostgreSQL no container (conforme convenção da aula).
+   Definir um serviço de banco **PostgreSQL 15** dedicado ao products-service, com volume para dados e rede interna do compose. O banco lógico deve ser **`products_db`**. A porta publicada no host para o Postgres deve ser **única no monorepo** (por exemplo **5436**, evitando colisão com checkout em **5434**, users em **5433** e payments em **5435**) e mapear para a porta padrão do PostgreSQL no container.
 
 4. **Configuração do banco**  
    Toda conexão (host, porta, credenciais, nome do banco) deve ser obtida por **variáveis de ambiente**, com valores de exemplo documentados para desenvolvimento local.
@@ -66,7 +66,7 @@ Os itens abaixo devem poder ser verificados de forma objetiva:
 
 1. O diretório do **products-service** existe no monorepo com projeto NestJS gerado de forma reproduzível (por exemplo, via Nest CLI) e scripts de build/execução funcionais.
 2. As dependências citadas na seção 1 estão declaradas e o projeto compila sem erros.
-3. Com `docker compose` do serviço, o PostgreSQL 15 sobe, o banco `products_db` está disponível e a porta **5434** no host aceita conexão quando mapeada conforme a spec.
+3. Com `docker compose` do serviço, o PostgreSQL 15 sobe, o banco `products_db` está disponível e a porta no host definida para este serviço (sem conflito com os demais microserviços) aceita conexão quando mapeada conforme o compose e `DB_PORT`.
 4. Com um arquivo de ambiente preenchido a partir do exemplo, a aplicação inicia na porta configurada (**3001** por padrão) e conecta ao banco usando somente variáveis de ambiente.
 5. O módulo de produtos está importado na aplicação; a entidade **Product** está mapeada para o TypeORM e a tabela correspondente é criada/atualizada em ambiente de desenvolvimento conforme a política já usada nos outros serviços (sem exigir migrações manuais nesta spec).
 6. O **ValidationPipe** global está ativo; requisições futuras com DTOs inválidos serão rejeitadas com erro de validação padronizado.
