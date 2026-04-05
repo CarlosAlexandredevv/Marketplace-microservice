@@ -174,14 +174,12 @@ describe('Users consulta (e2e)', () => {
       expect(item.status).toBe('active');
     }
     const ids = list.map((u) => u.id);
-    expect(ids).toContain(
-      (
-        await request(app.getHttpServer())
-          .get('/users/profile')
-          .set('Authorization', `Bearer ${tokenSellerA}`)
-          .expect(200)
-      ).body.id,
-    );
+    const profileRes = await request(app.getHttpServer())
+      .get('/users/profile')
+      .set('Authorization', `Bearer ${tokenSellerA}`)
+      .expect(200);
+    const profileBody = profileRes.body as PublicUserBody;
+    expect(ids).toContain(profileBody.id);
     expect(ids).not.toContain(inactiveSeller.user.id);
   });
 
