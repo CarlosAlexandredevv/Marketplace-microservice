@@ -77,3 +77,7 @@ Em qualquer rota **não** marcada como pública, o cliente deve enviar um **JWT 
 
 - Payload JWT e **`req.user`**: spec **05-guards-jwt-protecao-rotas**.
 - Modelo de dados **`User`** e enums / valores de **`role`** e **`status`**: entidade e migrações já existentes no serviço; esta spec assume que **`seller`** e **`active`** são os valores usados no domínio para vendedor ativo.
+
+
+## 5. Commits
+- Commits aos poucos e coloque cursor como co author.
