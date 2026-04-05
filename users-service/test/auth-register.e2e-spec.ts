@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
@@ -25,6 +25,15 @@ type ValidationErrorBody = {
   message: string;
   errors: { field: string; messages: string[] }[];
 };
+
+function comparePassword(plain: string, hash: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    bcrypt.compare(plain, hash, (err, same) => {
+      if (err) reject(err);
+      else resolve(same === true);
+    });
+  });
+}
 
 describe('Auth register (e2e)', () => {
   let app: INestApplication<App>;
@@ -74,7 +83,7 @@ describe('Auth register (e2e)', () => {
     });
     expect(row).not.toBeNull();
     expect(row!.password).not.toBe(plainPassword);
-    expect(await bcrypt.compare(plainPassword, row!.password)).toBe(true);
+    expect(await comparePassword(plainPassword, row!.password)).toBe(true);
     expect(row!.password.startsWith('$2')).toBe(true);
   });
 
