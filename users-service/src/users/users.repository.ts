@@ -36,4 +36,15 @@ export class UsersRepository {
     const user = this.ormRepository.create(data);
     return this.ormRepository.save(user);
   }
+
+  async findById(id: string): Promise<User | null> {
+    return this.ormRepository.findOne({ where: { id } });
+  }
+
+  async findActiveSellers(): Promise<User[]> {
+    return this.ormRepository.find({
+      where: { role: UserRole.SELLER, status: UserStatus.ACTIVE },
+      order: { createdAt: 'ASC' },
+    });
+  }
 }

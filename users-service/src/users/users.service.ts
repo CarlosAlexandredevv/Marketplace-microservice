@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from './entities/user.entity';
+import { PublicUser, toPublicUser } from './public-user';
 import { CreateUserInput, UsersRepository } from './users.repository';
 
 export type { CreateUserInput } from './users.repository';
@@ -18,5 +19,26 @@ export class UsersService {
 
   async create(data: CreateUserInput): Promise<User> {
     return this.usersRepository.create(data);
+  }
+
+  async getProfile(userId: string): Promise<PublicUser> {
+    const user = await this.usersRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+    return toPublicUser(user);
+  }
+
+  async listActiveSellers(): Promise<PublicUser[]> {
+    const users = await this.usersRepository.findActiveSellers();
+    return users.map(toPublicUser);
+  }
+
+  async getByIdOrThrow(id: string): Promise<PublicUser> {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+    return toPublicUser(user);
   }
 }

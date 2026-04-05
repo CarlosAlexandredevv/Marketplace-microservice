@@ -11,19 +11,11 @@ import {
 } from '../common/password.util';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UserStatus } from '../users/entities/user.entity';
+import { PublicUser, toPublicUser } from '../users/public-user';
 import { UsersService } from '../users/users.service';
-import { User, UserStatus } from '../users/entities/user.entity';
 
-export type PublicUser = {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
+export type { PublicUser };
 
 export type LoginResult = {
   user: PublicUser;
@@ -39,19 +31,6 @@ export class AuthService {
 
   normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
-  }
-
-  private toPublicUser(user: User): PublicUser {
-    return {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      status: user.status,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
   }
 
   async register(dto: RegisterDto): Promise<PublicUser> {
@@ -72,7 +51,7 @@ export class AuthService {
       status: UserStatus.ACTIVE,
     });
 
-    return this.toPublicUser(user);
+    return toPublicUser(user);
   }
 
   async login(dto: LoginDto): Promise<LoginResult> {
@@ -98,6 +77,6 @@ export class AuthService {
       role: user.role,
     });
 
-    return { user: this.toPublicUser(user), token };
+    return { user: toPublicUser(user), token };
   }
 }
