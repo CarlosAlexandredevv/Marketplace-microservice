@@ -12,6 +12,7 @@ import { MiddlewareModule } from './middleware/middleware.module';
 import { LoggingMiddleware } from './middleware/logging/logging.middleware';
 import { AuthModule } from './auth/auth.module';
 import { UsersProxyModule } from './users-proxy/users-proxy.module';
+import { ProductsProxyModule } from './products-proxy/products-proxy.module';
 import { APP_GUARD } from '@nestjs/core';
 import { CustomThrottlerGuard } from './guards/throttler.guard';
 import { HealthModule } from './health/health.module';
@@ -51,6 +52,7 @@ import { RetryModule } from './common/retry/retry.module';
     MiddlewareModule,
     AuthModule,
     UsersProxyModule,
+    ProductsProxyModule,
     HealthModule,
     HealthCheckModule,
     FallbackModule,
