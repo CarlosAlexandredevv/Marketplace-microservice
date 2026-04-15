@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import type { RetryOptions, RetryResult } from './retry.interface';
 
 @Injectable()
@@ -40,6 +40,10 @@ export class RetryService {
           totalTime,
         };
       } catch (error) {
+        if (this.isNonRetryableClientError(error)) {
+          throw error;
+        }
+
         lastError = error as Error;
         this.logger.warn(`Attempt ${attempt + 1} failed: ${lastError.message}`);
 
@@ -78,6 +82,14 @@ export class RetryService {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private isNonRetryableClientError(error: unknown): boolean {
+    return (
+      error instanceof HttpException &&
+      error.getStatus() >= 400 &&
+      error.getStatus() < 500
+    );
   }
 
   async executeWithExponentialBackoff<T>(

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import {
   CircuitBreakerOptions,
   CircuitBreakerState,
@@ -47,6 +47,10 @@ export class CircuitBreakerService {
 
       return result;
     } catch (error) {
+      if (this.isNonRetryableClientError(error)) {
+        throw error;
+      }
+
       this.onFailure(circuit, key, options);
       this.logger.error(
         `Circuit breaker failure for ${key}:`,
@@ -112,5 +116,13 @@ export class CircuitBreakerService {
   resetCircuit(key: string): void {
     this.circuits.delete(key);
     this.logger.log(`Circuit breaker RESET for ${key}`);
+  }
+
+  private isNonRetryableClientError(error: unknown): boolean {
+    return (
+      error instanceof HttpException &&
+      error.getStatus() >= 400 &&
+      error.getStatus() < 500
+    );
   }
 }

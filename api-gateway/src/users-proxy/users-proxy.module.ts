@@ -3,6 +3,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtAuthGuard } from 'src/guards/auth.guard';
 import { ProxyModule } from 'src/proxy/proxy.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { AuthProxyController } from './auth-proxy.controller';
 import { UsersProxyController } from './users-proxy.controller';
 
 @Module({
@@ -11,7 +12,7 @@ import { UsersProxyController } from './users-proxy.controller';
     AuthModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
-  controllers: [UsersProxyController],
+  controllers: [AuthProxyController, UsersProxyController],
   providers: [JwtAuthGuard],
 })
 export class UsersProxyModule {}

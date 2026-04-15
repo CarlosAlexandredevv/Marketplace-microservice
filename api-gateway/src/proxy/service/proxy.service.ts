@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { serviceConfig } from 'src/config/gateway.config';
 import { firstValueFrom } from 'rxjs';
 import { CircuitBreakerService } from 'src/common/circuit-breaker/circuit-breaker.service';
@@ -29,14 +29,14 @@ export class ProxyService {
     private readonly retryService: RetryService,
   ) {}
 
-  async proxyRequest(
+  async proxyRequest<T = unknown>(
     serviceName: keyof typeof serviceConfig,
     method: string,
     path: string,
     data?: unknown,
     headers?: Record<string, string>,
     userInfo?: UserInfo,
-  ) {
+  ): Promise<T> {
     const service = serviceConfig[serviceName];
     const url = `${service.url}${path}`;
 
@@ -57,24 +57,36 @@ export class ProxyService {
                   'x-user-role': userInfo?.role,
                 };
 
-                const response = await firstValueFrom(
-                  this.httpService.request({
-                    method: method.toLowerCase() as HttpMethod,
-                    url,
-                    data,
-                    headers: enhancedHeaders,
-                    timeout: service.timeout,
-                  }),
-                );
-
-                if (method.toLowerCase() === 'get') {
-                  this.cacheFallbackService.setCachedData(
-                    `${serviceName}-${path}`,
-                    response.data,
+                try {
+                  const response = await firstValueFrom(
+                    this.httpService.request({
+                      method: method.toLowerCase() as HttpMethod,
+                      url,
+                      data,
+                      headers: enhancedHeaders,
+                      timeout: service.timeout,
+                    }),
                   );
-                }
 
-                return response.data;
+                  if (method.toLowerCase() === 'get') {
+                    this.cacheFallbackService.setCachedData(
+                      `${serviceName}-${path}`,
+                      response.data,
+                    );
+                  }
+
+                  return response.data;
+                } catch (error: unknown) {
+                  const status = this.getAxiosResponseStatus(error);
+                  if (status !== undefined && status >= 400 && status < 500) {
+                    const body = this.getAxiosResponseData(error);
+                    throw new HttpException(
+                      body ?? { message: (error as Error).message },
+                      status,
+                    );
+                  }
+                  throw error;
+                }
               },
               service.timeout,
             );
@@ -130,5 +142,20 @@ export class ProxyService {
           'Service unavailable',
         );
     }
+  }
+
+  private getAxiosResponseStatus(error: unknown): number | undefined {
+    if (typeof error !== 'object' || error === null || !('response' in error)) {
+      return undefined;
+    }
+    const res = (error as { response?: { status?: number } }).response;
+    return typeof res?.status === 'number' ? res.status : undefined;
+  }
+
+  private getAxiosResponseData(error: unknown): unknown {
+    if (typeof error !== 'object' || error === null || !('response' in error)) {
+      return undefined;
+    }
+    return (error as { response?: { data?: unknown } }).response?.data;
   }
 }

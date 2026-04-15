@@ -1,6 +1,18 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import type { Request } from 'express';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/guards/auth.guard';
 import { ProxyService } from 'src/proxy/service/proxy.service';
 
@@ -45,6 +57,26 @@ export class UsersProxyController {
       'users',
       'get',
       '/users/sellers',
+      undefined,
+      auth ? { Authorization: auth } : {},
+      {
+        userId: user.userId,
+        email: user.email,
+        role: user.role,
+      },
+    );
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Utilizador por ID (proxy para users-service)' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  findOne(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
+    const user = req.user as GatewayJwtUser;
+    const auth = req.headers.authorization;
+    return this.proxyService.proxyRequest(
+      'users',
+      'get',
+      `/users/${id}`,
       undefined,
       auth ? { Authorization: auth } : {},
       {
