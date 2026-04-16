@@ -30,12 +30,13 @@ export class Cart {
   status: CartStatus;
 
   @Column({
+    name: 'amount',
     type: 'decimal',
     precision: 10,
     scale: 2,
     default: '0',
   })
-  total: string;
+  amount: string;
 
   @OneToMany(() => CartItem, (item) => item.cart, {
     eager: true,

@@ -15,8 +15,8 @@ export enum OrderStatus {
 
 @Entity('orders')
 export class Order {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'id' })
+  orderId: string;
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
@@ -24,8 +24,8 @@ export class Order {
   @Column({ name: 'cart_id', type: 'uuid' })
   cartId: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  total: string;
+  @Column({ name: 'amount', type: 'decimal', precision: 10, scale: 2 })
+  amount: string;
 
   @Column({
     type: 'enum',
