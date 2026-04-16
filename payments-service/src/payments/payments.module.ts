@@ -1,15 +1,21 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AbacatePayModule } from 'src/gateway/abacatepay/abacatepay.module';
+import { FakePaymentGatewayService } from '../gateway/fake-payment-gateway.service';
+import { RabbitmqService } from '../events/rabbitmq.service';
+import { PaymentConsumerService } from '../events/payment-consumer.service';
+import { HealthController } from '../health.controller';
 import { Payment } from './entities/payment.entity';
-import { HealthController } from './health.controller';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Payment]), AbacatePayModule],
+  imports: [TypeOrmModule.forFeature([Payment])],
   controllers: [PaymentsController, HealthController],
-  providers: [PaymentsService],
-  exports: [PaymentsService],
+  providers: [
+    RabbitmqService,
+    FakePaymentGatewayService,
+    PaymentsService,
+    PaymentConsumerService,
+  ],
 })
 export class PaymentsModule {}

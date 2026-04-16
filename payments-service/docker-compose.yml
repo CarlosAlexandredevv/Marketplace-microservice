@@ -1,5 +1,4 @@
-
-version: "3.8"
+version: '3.8'
 
 services:
   payments-db:
@@ -10,7 +9,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5435:5432"
+      - '5437:5432'
     volumes:
       - payments_db_data:/var/lib/postgresql/data
     networks:

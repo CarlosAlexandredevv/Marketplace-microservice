@@ -16,6 +16,7 @@ interface OrderResponse {
   userId: string;
   total: string;
   paymentMethod: string;
+  status: 'pending' | 'paid' | 'failed' | 'cancelled';
 }
 
 interface PaymentResponse {
@@ -109,9 +110,15 @@ async function waitForPaymentStatus(
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const res = await gateway()
       .get(`/payments/${orderId}`)
-      .set('Authorization', `Bearer ${buyerToken}`)
-      .expect(200);
+      .set('Authorization', `Bearer ${buyerToken}`);
 
+    // 404 = pagamento ainda não persistido (fila assíncrona)
+    if (res.status === 404) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      continue;
+    }
+
+    expect(res.status).toBe(200);
     const body = res.body as PaymentResponse | null;
 
     if (body && body.status === expectedStatus) {
@@ -126,8 +133,35 @@ async function waitForPaymentStatus(
   );
 }
 
+async function waitForOrderStatus(
+  buyerToken: string,
+  orderId: string,
+  expectedStatus: 'paid' | 'failed',
+) {
+  const maxAttempts = 20;
+  const delayMs = 1000;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const res = await gateway()
+      .get(`/orders/${orderId}`)
+      .set('Authorization', `Bearer ${buyerToken}`)
+      .expect(200);
+
+    const body = res.body as OrderResponse;
+    if (body.status === expectedStatus) {
+      return body;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  throw new Error(
+    `Order ${orderId} did not reach status ${expectedStatus} in time`,
+  );
+}
+
 describe('Gateway ↔ Payments (live E2E)', () => {
-  it(' Cenário 1: pagamento aprovado para produto com preço normal', async () => {
+  it('Cenário 1: pagamento aprovado para produto com preço normal', async () => {
     const seller = await createUserAndLogin('seller');
     const buyer = await createUserAndLogin('buyer');
 
@@ -144,6 +178,14 @@ describe('Gateway ↔ Payments (live E2E)', () => {
 
     expect(payment.orderId).toBe(order.orderId);
     expect(payment.status).toBe('approved');
+
+    const orderAfter = await waitForOrderStatus(
+      buyer.accessToken,
+      order.orderId,
+      'paid',
+    );
+    expect(orderAfter.orderId).toBe(order.orderId);
+    expect(orderAfter.status).toBe('paid');
   });
 
   it('Cenário 2: pagamento rejeitado para produto com preço terminando em .99', async () => {
@@ -163,5 +205,13 @@ describe('Gateway ↔ Payments (live E2E)', () => {
 
     expect(payment.orderId).toBe(order.orderId);
     expect(payment.status).toBe('rejected');
+
+    const orderAfter = await waitForOrderStatus(
+      buyer.accessToken,
+      order.orderId,
+      'failed',
+    );
+    expect(orderAfter.orderId).toBe(order.orderId);
+    expect(orderAfter.status).toBe('failed');
   });
 });

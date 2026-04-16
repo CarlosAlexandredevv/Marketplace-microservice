@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { databaseConfig } from './config/database.config';
-import { EventsModule } from './events/events.module';
-import { MetricsModule } from './events/metrics/metrics.module';
 import { PaymentsModule } from './payments/payments.module';
 
 @Module({
@@ -15,11 +14,14 @@ import { PaymentsModule } from './payments/payments.module';
       envFilePath: '.env',
     }),
     TypeOrmModule.forRoot(databaseConfig),
+    AuthModule,
     PaymentsModule,
-    EventsModule,
-    MetricsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

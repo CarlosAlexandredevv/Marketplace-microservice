@@ -2,28 +2,24 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-export enum PaymentStatus {
-  PENDING = 'pending',
+export enum PaymentRecordStatus {
   APPROVED = 'approved',
   REJECTED = 'rejected',
 }
 
 @Entity('payments')
-@Index(['gatewayBillingId'])
-@Index(['status'])
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid', unique: true })
+  @Column({ name: 'order_id', type: 'uuid', unique: true })
   orderId: string;
 
-  @Column({ type: 'uuid' })
+  @Column({ name: 'user_id', type: 'uuid' })
   userId: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
@@ -31,38 +27,13 @@ export class Payment {
 
   @Column({
     type: 'enum',
-    enum: PaymentStatus,
-    default: PaymentStatus.PENDING,
+    enum: PaymentRecordStatus,
   })
-  status: PaymentStatus;
+  status: PaymentRecordStatus;
 
-  @Column({ type: 'varchar', length: 50 })
-  paymentMethod: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  gatewayBillingId: string | null;
-
-  @Column({ type: 'varchar', length: 500, nullable: true })
-  paymentUrl: string | null;
-
-  @Column({ type: 'text', nullable: true })
-  pixBrCode: string | null;
-
-  @Column({ type: 'text', nullable: true })
-  pixBrCodeBase64: string | null;
-
-  @Column({ type: 'timestamptz', nullable: true })
-  pixExpiresAt: Date | null;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  rejectionReason: string | null;
-
-  @Column({ type: 'timestamptz', nullable: true })
-  processedAt: Date | null;
-
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
