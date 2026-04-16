@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -14,6 +15,10 @@ export enum CartStatus {
   ABANDONED = 'abandoned',
 }
 
+@Index('UQ_carts_user_id_active', ['userId'], {
+  unique: true,
+  where: `"status" = 'active'`,
+})
 @Entity('carts')
 export class Cart {
   @PrimaryGeneratedColumn('uuid')
@@ -30,16 +35,15 @@ export class Cart {
   status: CartStatus;
 
   @Column({
-    name: 'amount',
+    name: 'total',
     type: 'decimal',
     precision: 10,
     scale: 2,
     default: '0',
   })
-  amount: string;
+  total: string;
 
   @OneToMany(() => CartItem, (item) => item.cart, {
-    eager: true,
     cascade: true,
   })
   items: CartItem[];
