@@ -22,6 +22,7 @@ import { CircuitBreakerModule } from './common/circuit-breaker/circuit-breaker.m
 import { TimeoutModule } from './common/timeout/timeout.module';
 import { RetryModule } from './common/retry/retry.module';
 import { CheckoutProxyModule } from './checkout-proxy/checkout-proxy.module';
+import { PaymentsProxyModule } from './payments-proxy/payments-proxy.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { CheckoutProxyModule } from './checkout-proxy/checkout-proxy.module';
     TimeoutModule,
     RetryModule,
     CheckoutProxyModule,
+    PaymentsProxyModule,
   ],
   controllers: [AppController],
   providers: [
