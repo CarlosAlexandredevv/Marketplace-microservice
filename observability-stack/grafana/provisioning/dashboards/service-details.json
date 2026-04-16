@@ -1,0 +1,166 @@
+{
+  "uid": "service-details",
+  "title": "Service Details",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 0,
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "refresh": "15s",
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "label": "Service",
+        "datasource": "Prometheus",
+        "query": "label_values(up, job)",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": ".*"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Rate por rota/método (req/s)",
+      "datasource": "Prometheus",
+      "unit": "reqps",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (route, method) (rate(http_requests_total{job=~\"$service\",route!=\"/metrics\"}[5m]))",
+          "legendFormat": "{{method}} {{route}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Errors por rota/método (4xx e 5xx)",
+      "datasource": "Prometheus",
+      "unit": "reqps",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (route, method) (rate(http_requests_total{job=~\"$service\",status_code=~\"4..\",route!=\"/metrics\"}[5m]))",
+          "legendFormat": "4xx {{method}} {{route}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (route, method) (rate(http_requests_total{job=~\"$service\",status_code=~\"5..\",route!=\"/metrics\"}[5m]))",
+          "legendFormat": "5xx {{method}} {{route}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Duração por rota (P50, P95, P99)",
+      "datasource": "Prometheus",
+      "unit": "s",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by (le, route, method) (rate(http_request_duration_seconds_bucket{job=~\"$service\",route!=\"/metrics\"}[5m])))",
+          "legendFormat": "P50 {{method}} {{route}}"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le, route, method) (rate(http_request_duration_seconds_bucket{job=~\"$service\",route!=\"/metrics\"}[5m])))",
+          "legendFormat": "P95 {{method}} {{route}}"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (le, route, method) (rate(http_request_duration_seconds_bucket{job=~\"$service\",route!=\"/metrics\"}[5m])))",
+          "legendFormat": "P99 {{method}} {{route}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "table",
+      "title": "Top rotas por volume",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum by (route, method) (rate(http_requests_total{job=~\"$service\",route!=\"/metrics\"}[5m])))",
+          "legendFormat": "{{method}} {{route}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "piechart",
+      "title": "Distribuição de status codes",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status_code) (rate(http_requests_total{job=~\"$service\",route!=\"/metrics\"}[5m]))",
+          "legendFormat": "{{status_code}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "CPU do processo",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 16 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(process_cpu_seconds_total{job=~\"$service\"}[5m])",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Memória do processo",
+      "datasource": "Prometheus",
+      "unit": "bytes",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "process_resident_memory_bytes{job=~\"$service\"}",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Event loop lag (média)",
+      "datasource": "Prometheus",
+      "unit": "s",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "nodejs_eventloop_lag_seconds{job=~\"$service\"}",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    }
+  ]
+}

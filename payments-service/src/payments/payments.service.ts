@@ -5,7 +5,12 @@ import { FakePaymentGatewayService } from '../gateway/fake-payment-gateway.servi
 import type { PaymentOrderMessage } from '../events/payment-order-message';
 import type { PaymentResultMessage } from '../events/payment-result-message';
 import { RabbitmqService } from '../events/rabbitmq.service';
-import { Payment, PaymentRecordStatus } from './entities/payment.entity';
+import { MetricsService } from '../metrics/metrics.service';
+import {
+  Payment,
+  PaymentRecordStatus,
+  PaymentRejectionReason,
+} from './entities/payment.entity';
 
 const PAYMENTS_EXCHANGE = 'payments';
 const PAYMENT_RESULT_ROUTING_KEY = 'payment.result';
@@ -17,6 +22,7 @@ export class PaymentsService {
     private readonly paymentRepository: Repository<Payment>,
     private readonly fakeGateway: FakePaymentGatewayService,
     private readonly rabbitmq: RabbitmqService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async processPaymentOrderMessage(
@@ -42,6 +48,15 @@ export class PaymentsService {
       status,
     });
     await this.paymentRepository.save(payment);
+    this.metricsService.incrementProcessedPayment();
+
+    if (status === PaymentRecordStatus.APPROVED) {
+      this.metricsService.incrementApprovedPayment();
+    } else {
+      this.metricsService.incrementRejectedPayment(
+        PaymentRejectionReason.INSUFFICIENT_FUNDS,
+      );
+    }
 
     const result: PaymentResultMessage = {
       orderId: message.orderId,

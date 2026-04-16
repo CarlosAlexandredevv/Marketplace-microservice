@@ -30,6 +30,7 @@ export class PaymentQueueService {
         this.EXCHANGE, // Para onde enviar
         this.ROUTING_KEY, // Como rotear
         enrichmentMessage, // O que enviar
+        this.ROUTING_KEY,
       );
 
       this.logger.log(

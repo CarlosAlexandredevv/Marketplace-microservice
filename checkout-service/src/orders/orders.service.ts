@@ -10,6 +10,7 @@ import { PaymentQueueService } from '../events/payment-queue/payment-queue.servi
 import type { PaymentOrderMessage } from '../events/payment-queue.interface';
 import { CartItem } from '../cart/entities/cart-item.entity';
 import { Cart, CartStatus } from '../cart/entities/cart.entity';
+import { MetricsService } from '../metrics/metrics.service';
 import { CheckoutDto } from './dto/checkout.dto';
 import { OrderResponseDto } from './dto/order-response.dto';
 import { Order, OrderStatus } from './entities/order.entity';
@@ -45,6 +46,7 @@ export class OrdersService {
     private readonly orderRepository: Repository<Order>,
     private readonly dataSource: DataSource,
     private readonly paymentQueueService: PaymentQueueService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async checkout(userId: string, dto: CheckoutDto): Promise<OrderResponseDto> {
@@ -101,6 +103,7 @@ export class OrdersService {
       items: messageItems,
       paymentMethod: savedOrder.paymentMethod,
     };
+    this.metricsService.incrementOrdersCreated();
 
     try {
       await this.paymentQueueService.publishPaymentOrderSafe(message);

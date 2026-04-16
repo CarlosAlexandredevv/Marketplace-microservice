@@ -11,6 +11,13 @@ export enum PaymentRecordStatus {
   REJECTED = 'rejected',
 }
 
+export enum PaymentRejectionReason {
+  INSUFFICIENT_FUNDS = 'insufficient_funds',
+  FRAUD_SUSPECTED = 'fraud_suspected',
+  GATEWAY_ERROR = 'gateway_error',
+  VALIDATION_ERROR = 'validation_error',
+}
+
 @Entity('payments')
 export class Payment {
   @PrimaryGeneratedColumn('uuid')

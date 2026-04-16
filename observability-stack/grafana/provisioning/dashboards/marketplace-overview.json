@@ -1,0 +1,134 @@
+{
+  "uid": "marketplace-overview",
+  "title": "Marketplace Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 0,
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Status por serviço (UP=1)",
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=~\"api-gateway|checkout-service|payments-service|products-service|users-service\"}",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Throughput por serviço (req/s)",
+      "datasource": "Prometheus",
+      "unit": "reqps",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (job) (rate(http_requests_total{route!=\"/metrics\"}[5m]))",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Erros HTTP por serviço (4xx e 5xx)",
+      "datasource": "Prometheus",
+      "unit": "reqps",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (job) (rate(http_requests_total{status_code=~\"4..\",route!=\"/metrics\"}[5m]))",
+          "legendFormat": "{{job}} 4xx"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (job) (rate(http_requests_total{status_code=~\"5..\",route!=\"/metrics\"}[5m]))",
+          "legendFormat": "{{job}} 5xx"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Latência P95 por serviço",
+      "datasource": "Prometheus",
+      "unit": "s",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, job) (rate(http_request_duration_seconds_bucket{route!=\"/metrics\"}[5m])))",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Memória por serviço",
+      "datasource": "Prometheus",
+      "unit": "bytes",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "process_resident_memory_bytes{job=~\"api-gateway|checkout-service|payments-service|products-service|users-service\"}",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Pagamentos por segundo (processados, aprovados, rejeitados)",
+      "datasource": "Prometheus",
+      "unit": "ops",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(payments_processed_total[5m]))", "legendFormat": "processed" },
+        { "refId": "B", "expr": "sum(rate(payments_approved_total[5m]))", "legendFormat": "approved" },
+        { "refId": "C", "expr": "sum(rate(payments_rejected_total[5m]))", "legendFormat": "rejected" }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Pedidos criados por segundo",
+      "datasource": "Prometheus",
+      "unit": "ops",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(orders_created_total[5m]))", "legendFormat": "orders_created" }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Mensagens publicadas por fila (ops/s)",
+      "datasource": "Prometheus",
+      "unit": "ops",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (queue) (rate(rabbitmq_messages_published_total[5m]))",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    }
+  ]
+}

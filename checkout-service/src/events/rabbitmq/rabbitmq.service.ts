@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import * as amqp from 'amqplib';
 import { ConfigService } from '@nestjs/config';
+import { MetricsService } from '../../metrics/metrics.service';
 
 @Injectable()
 export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
@@ -13,7 +14,10 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
   private connection: amqp.ChannelModel;
   private channel: amqp.Channel;
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private readonly metricsService: MetricsService,
+  ) {}
 
   async onModuleInit() {
     await this.connect();
@@ -86,14 +90,11 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     exchange: string,
     routingKey: string,
     message: any,
+    queueLabel = routingKey,
   ): Promise<void> {
     try {
       if (!this.channel) {
-        this.logger.warn(
-          '⚠️ RabbitMQ channel not available, skipping message publish',
-        );
-
-        return;
+        throw new Error('RabbitMQ channel not available');
       }
 
       await this.channel.assertExchange(exchange, 'topic', { durable: true });
@@ -115,8 +116,11 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
       if (!published) {
         throw new Error('Failed to publish message to RabbitMQ');
       }
+
+      this.metricsService.incrementPublishedMessage(queueLabel);
     } catch (error) {
       this.logger.error('❌ Error publishing message to RabbitMQ:', error);
+      throw error;
     }
   }
 
