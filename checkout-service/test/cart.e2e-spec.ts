@@ -23,11 +23,9 @@ describe('CartController (e2e)', () => {
   const secret = process.env.JWT_SECRET!;
 
   function tokenForUser(sub: string): string {
-    return sign(
-      { sub, email: `${sub}@test.com`, role: 'buyer' },
-      secret,
-      { expiresIn: '1h' },
-    );
+    return sign({ sub, email: `${sub}@test.com`, role: 'buyer' }, secret, {
+      expiresIn: '1h',
+    });
   }
 
   beforeAll(async () => {
@@ -51,21 +49,27 @@ describe('CartController (e2e)', () => {
   });
 
   beforeEach(() => {
-    productsClientMock.getProduct.mockImplementation(
-      async (id: string) => ({
-        id,
-        name: 'Produto mock',
-        price: '10.00',
-        stock: 5,
-        sellerId: '99999999-9999-4999-8999-999999999999',
-        isActive: true,
-      }),
-    );
+    productsClientMock.getProduct.mockImplementation(async (id: string) => ({
+      id,
+      name: 'Produto mock',
+      price: '10.00',
+      stock: 5,
+      sellerId: '99999999-9999-4999-8999-999999999999',
+      isActive: true,
+    }));
   });
 
   afterEach(async () => {
-    await dataSource.getRepository(CartItem).createQueryBuilder().delete().execute();
-    await dataSource.getRepository(Cart).createQueryBuilder().delete().execute();
+    await dataSource
+      .getRepository(CartItem)
+      .createQueryBuilder()
+      .delete()
+      .execute();
+    await dataSource
+      .getRepository(Cart)
+      .createQueryBuilder()
+      .delete()
+      .execute();
     jest.clearAllMocks();
   });
 

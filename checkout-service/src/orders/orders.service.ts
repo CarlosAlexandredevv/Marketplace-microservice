@@ -95,11 +95,11 @@ export class OrdersService {
     const messageItems = toPaymentItems(lineItems);
 
     const message: PaymentOrderMessage = {
-      orderId: savedOrder.orderId as string,
-      userId: savedOrder.userId as string,
+      orderId: savedOrder.orderId,
+      userId: savedOrder.userId,
       amount,
       items: messageItems,
-      paymentMethod: savedOrder.paymentMethod as string,
+      paymentMethod: savedOrder.paymentMethod,
     };
 
     try {
@@ -136,10 +136,10 @@ export class OrdersService {
 
   private toOrderResponse(order: Order): OrderResponseDto {
     return {
-      orderId: order.orderId as string,
+      orderId: order.orderId,
       userId: order.userId,
       cartId: order.cartId,
-      total: order.amount as string,
+      total: order.amount,
       status: order.status,
       paymentMethod: order.paymentMethod,
       createdAt: order.createdAt,

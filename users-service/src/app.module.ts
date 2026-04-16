@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { databaseConfig } from './config/database.config';
 import { UsersModule } from './users/users.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UsersModule } from './users/users.module';
     TypeOrmModule.forRoot(databaseConfig),
     UsersModule,
     AuthModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [

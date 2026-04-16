@@ -23,6 +23,7 @@ import { TimeoutModule } from './common/timeout/timeout.module';
 import { RetryModule } from './common/retry/retry.module';
 import { CheckoutProxyModule } from './checkout-proxy/checkout-proxy.module';
 import { PaymentsProxyModule } from './payments-proxy/payments-proxy.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { PaymentsProxyModule } from './payments-proxy/payments-proxy.module';
     RetryModule,
     CheckoutProxyModule,
     PaymentsProxyModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [

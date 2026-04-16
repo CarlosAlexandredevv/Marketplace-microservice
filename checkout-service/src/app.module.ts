@@ -10,6 +10,7 @@ import { OrdersModule } from './orders/orders.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { databaseConfig } from './config/database.config';
     CartModule,
     OrdersModule,
     EventsModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { databaseConfig } from './config/database.config';
 import { PaymentsModule } from './payments/payments.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PaymentsModule } from './payments/payments.module';
     TypeOrmModule.forRoot(databaseConfig),
     AuthModule,
     PaymentsModule,
+    MetricsModule,
   ],
   providers: [
     {
