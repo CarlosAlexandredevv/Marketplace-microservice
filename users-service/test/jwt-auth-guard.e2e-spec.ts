@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import type { Request } from 'express';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from '../src/app.module';
+import { E2eSqliteAppModule } from './e2e-sqlite-app.module';
 import { createAppValidationPipe } from '../src/validation-pipe.config';
 
 @Controller('e2e')
@@ -23,7 +23,7 @@ describe('JWT auth guard (e2e)', () => {
   beforeAll(async () => {
     expect(process.env.JWT_SECRET?.trim()).toBeDefined();
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [E2eSqliteAppModule],
       controllers: [E2EJwtProbeController],
     }).compile();
 

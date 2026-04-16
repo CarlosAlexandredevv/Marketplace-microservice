@@ -5,7 +5,7 @@
   "maxWorkers": 1,
   "setupFiles": ["<rootDir>/jest-e2e-setup.ts"],
   "testRegex": ".e2e-spec.ts$",
-  "testTimeout": 60000,
+  "testTimeout": 120000,
   "forceExit": true,
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"

@@ -4,7 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
-import { AppModule } from '../src/app.module';
+import { E2eSqliteAppModule } from './e2e-sqlite-app.module';
 import { User, UserStatus } from '../src/users/entities/user.entity';
 import { createAppValidationPipe } from '../src/validation-pipe.config';
 
@@ -41,7 +41,7 @@ describe('Auth login (e2e)', () => {
   beforeAll(async () => {
     expect(process.env.JWT_SECRET?.trim()).toBeDefined();
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [E2eSqliteAppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();

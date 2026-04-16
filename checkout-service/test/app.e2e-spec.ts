@@ -3,14 +3,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { E2eSqliteAppModule } from './e2e-sqlite-app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [E2eSqliteAppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();

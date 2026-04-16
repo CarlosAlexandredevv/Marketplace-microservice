@@ -4,7 +4,7 @@ import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
-import { AppModule } from './../src/app.module';
+import { E2eSqliteAppModule } from './e2e-sqlite-app.module';
 import { Cart, CartStatus } from './../src/cart/entities/cart.entity';
 import { CartItem } from './../src/cart/entities/cart-item.entity';
 import type { PaymentOrderMessage } from './../src/events/payment-queue.interface';
@@ -13,6 +13,10 @@ import { ProductsClientService } from './../src/products-client/products-client.
 import { CartResponseDto } from './../src/cart/dto/cart-response.dto';
 import { OrderResponseDto } from './../src/orders/dto/order-response.dto';
 import { Order } from './../src/orders/entities/order.entity';
+
+function expectMoney(value: unknown, expected: string) {
+  expect(Number(value).toFixed(2)).toBe(expected);
+}
 
 describe('Orders e checkout (e2e)', () => {
   let app: INestApplication<App>;
@@ -32,7 +36,7 @@ describe('Orders e checkout (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [E2eSqliteAppModule],
     })
       .overrideProvider(ProductsClientService)
       .useValue(productsClientMock)
@@ -132,7 +136,7 @@ describe('Orders e checkout (e2e)', () => {
 
     const addBody = addRes.body as CartResponseDto;
     const cartId = addBody.id as string;
-    expect(addBody.total).toBe('20.00');
+    expectMoney(addBody.total, '20.00');
 
     const res = await request(app.getHttpServer())
       .post('/cart/checkout')
@@ -144,10 +148,10 @@ describe('Orders e checkout (e2e)', () => {
     expect(created).toMatchObject({
       userId,
       cartId,
-      total: '20.00',
       status: 'pending',
       paymentMethod: 'credit_card',
     });
+    expectMoney(created.total, '20.00');
     expect(created.orderId).toBeDefined();
 
     const cart = await dataSource.getRepository(Cart).findOneOrFail({
@@ -192,6 +196,8 @@ describe('Orders e checkout (e2e)', () => {
       .set('Authorization', `Bearer ${tokenForUser(userId)}`)
       .send({ productId, quantity: 1 })
       .expect(201);
+
+    await new Promise((r) => setTimeout(r, 1100));
 
     const second = await request(app.getHttpServer())
       .post('/cart/checkout')

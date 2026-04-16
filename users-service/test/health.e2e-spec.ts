@@ -3,12 +3,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { E2eSqliteAppModule } from './e2e-sqlite-app.module';
-import { createAppValidationPipe } from './../src/validation-pipe.config';
+import { createAppValidationPipe } from '../src/validation-pipe.config';
 
-describe('AppController (e2e)', () => {
+describe('Health (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [E2eSqliteAppModule],
     }).compile();
@@ -18,14 +18,15 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+  it('GET /health — 200 e inclui check do banco', async () => {
+    const res = await request(app.getHttpServer()).get('/health').expect(200);
+
+    expect(res.body).toHaveProperty('status');
+    expect(res.body).toHaveProperty('info');
+    expect(res.body.info).toHaveProperty('postgres');
   });
 });

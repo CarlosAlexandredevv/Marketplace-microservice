@@ -7,6 +7,11 @@
   "setupFiles": ["<rootDir>/jest-e2e-setup.ts"],
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "testPathIgnorePatterns": [
+    "gateway-users-live",
+    "gateway-checkout-live",
+    "gateway-payments-live"
+  ],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   }

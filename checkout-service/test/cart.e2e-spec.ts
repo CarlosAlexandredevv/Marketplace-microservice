@@ -8,10 +8,15 @@ import { sign } from 'jsonwebtoken';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
-import { AppModule } from './../src/app.module';
+import { E2eSqliteAppModule } from './e2e-sqlite-app.module';
 import { Cart, CartStatus } from './../src/cart/entities/cart.entity';
 import { CartItem } from './../src/cart/entities/cart-item.entity';
 import { ProductsClientService } from './../src/products-client/products-client.service';
+
+/** SQLite serializa decimais como número no JSON; PG como string. */
+function expectMoney(value: unknown, expected: string) {
+  expect(Number(value).toFixed(2)).toBe(expected);
+}
 
 describe('CartController (e2e)', () => {
   let app: INestApplication<App>;
@@ -30,7 +35,7 @@ describe('CartController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [E2eSqliteAppModule],
     })
       .overrideProvider(ProductsClientService)
       .useValue(productsClientMock)
@@ -110,9 +115,9 @@ describe('CartController (e2e)', () => {
       id: null,
       userId,
       status: 'active',
-      total: '0.00',
       items: [],
     });
+    expectMoney(res.body.total, '0.00');
 
     const count = await dataSource.getRepository(Cart).count();
     expect(count).toBe(0);
@@ -140,11 +145,11 @@ describe('CartController (e2e)', () => {
     expect(res.body.items[0]).toMatchObject({
       productId,
       productName: 'Item A',
-      price: '15.50',
       quantity: 2,
-      subtotal: '31.00',
     });
-    expect(res.body.total).toBe('31.00');
+    expectMoney(res.body.items[0].price, '15.50');
+    expectMoney(res.body.items[0].subtotal, '31.00');
+    expectMoney(res.body.total, '31.00');
     expect(res.body.id).toBeDefined();
   });
 
@@ -185,9 +190,9 @@ describe('CartController (e2e)', () => {
     expect(res.body.items).toHaveLength(1);
     expect(res.body.items[0].quantity).toBe(3);
     expect(res.body.items[0].productName).toBe('Nome atualizado');
-    expect(res.body.items[0].price).toBe('12.00');
-    expect(res.body.items[0].subtotal).toBe('36.00');
-    expect(res.body.total).toBe('36.00');
+    expectMoney(res.body.items[0].price, '12.00');
+    expectMoney(res.body.items[0].subtotal, '36.00');
+    expectMoney(res.body.total, '36.00');
   });
 
   it('POST /cart/items — 422 produto inativo, sem item novo', async () => {
@@ -255,7 +260,7 @@ describe('CartController (e2e)', () => {
       .expect(200);
 
     expect(resB.body.items).toEqual([]);
-    expect(resB.body.total).toBe('0.00');
+    expectMoney(resB.body.total, '0.00');
   });
 
   it('DELETE /cart/items/:itemId — remove e recalcula total; outro usuário recebe 404', async () => {
@@ -288,7 +293,7 @@ describe('CartController (e2e)', () => {
       .expect(200);
 
     expect(delRes.body.items).toEqual([]);
-    expect(delRes.body.total).toBe('0.00');
+    expectMoney(delRes.body.total, '0.00');
   });
 
   it('no máximo um carrinho active por usuário após fluxos de POST', async () => {
