@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { databaseConfig } from './config/database.config';
 import { UsersModule } from './users/users.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { MetricsModule } from './metrics/metrics.module';
     UsersModule,
     AuthModule,
     MetricsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [

@@ -11,9 +11,4 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Public()
-  @Get('health')
-  health(): { status: string; service: string } {
-    return { status: 'ok', service: 'checkout-service' };
-  }
 }

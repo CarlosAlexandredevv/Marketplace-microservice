@@ -7,6 +7,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { databaseConfig } from './config/database.config';
 import { PaymentsModule } from './payments/payments.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MetricsModule } from './metrics/metrics.module';
     AuthModule,
     PaymentsModule,
     MetricsModule,
+    HealthModule,
   ],
   providers: [
     {

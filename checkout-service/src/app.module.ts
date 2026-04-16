@@ -11,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config';
 import { MetricsModule } from './metrics/metrics.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MetricsModule } from './metrics/metrics.module';
     OrdersModule,
     EventsModule,
     MetricsModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [

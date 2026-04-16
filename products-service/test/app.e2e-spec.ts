@@ -31,15 +31,13 @@ describe('AppController (e2e)', () => {
       .expect('products-service');
   });
 
-  it('GET /health — 200 sem Authorization (rota pública)', () => {
+  it('GET /health — 200 sem Authorization (rota pública, Terminus + DB)', () => {
     return request(app.getHttpServer())
       .get('/health')
       .expect(200)
       .expect((res) => {
-        expect(res.body).toEqual({
-          status: 'ok',
-          service: 'products-service',
-        });
+        expect(res.body.status).toBe('ok');
+        expect(res.body.details?.postgres?.status).toBe('up');
       });
   });
 });

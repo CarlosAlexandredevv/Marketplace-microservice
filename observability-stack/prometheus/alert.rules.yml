@@ -1,0 +1,72 @@
+groups:
+  - name: marketplace-alerts
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up{job=~"api-gateway|users-service|products-service|checkout-service|payments-service"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: Serviço {{ $labels.instance }} (job {{ $labels.job }}) está DOWN
+          description: O scrape do Prometheus não está coletando métricas deste target.
+
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum by (job) (rate(http_requests_total{status_code=~"5..",route!="/metrics"}[1m]))
+            /
+            clamp_min(sum by (job) (rate(http_requests_total{route!="/metrics"}[1m])), 1e-9)
+          ) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Taxa de erro HTTP 5xx alta no job {{ $labels.job }}
+          description: Mais de 10% das requisições (excluindo /metrics) retornaram 5xx na janela de 1m.
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, job) (rate(http_request_duration_seconds_bucket{route!="/metrics"}[1m]))
+          ) > 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Latência P95 alta no job {{ $labels.job }}
+          description: P95 de http_request_duration_seconds acima de 2s na janela de 1m.
+
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes{job=~"api-gateway|users-service|products-service|checkout-service|payments-service"} > 536870912
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Uso de memória residente alto no job {{ $labels.job }}
+          description: process_resident_memory_bytes acima de 512MiB por 2 minutos.
+
+      - alert: NoPaymentsProcessed
+        expr: sum(increase(payments_processed_total[5m])) == 0
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: Nenhum pagamento processado nos últimos 5 minutos
+          description: A métrica payments_processed_total não incrementou no intervalo de 5m (agregado).
+
+      - alert: HighPaymentRejectionRate
+        expr: |
+          (
+            sum(rate(payments_rejected_total[2m]))
+            /
+            clamp_min(sum(rate(payments_processed_total[2m])), 1e-9)
+          ) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Taxa alta de rejeição de pagamentos
+          description: Mais de 50% dos pagamentos processados foram rejeitados na janela de 2m.
