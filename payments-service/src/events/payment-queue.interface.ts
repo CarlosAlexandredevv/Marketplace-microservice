@@ -3,7 +3,10 @@ export interface PaymentOrderMessage {
   userId: string;
   amount: number;
   items: {
+    id?: string;
     productId: string;
+    name?: string;
+    description?: string;
     quantity: number;
     price: number;
   }[];

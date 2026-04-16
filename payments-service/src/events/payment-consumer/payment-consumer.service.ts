@@ -4,6 +4,8 @@ import { PaymentOrderMessage } from '../payment-queue.interface';
 import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
 import { validatePaymentOrderMessage } from './payment-message.validator';
 import { MetricsService } from 'src/events/metrics/services/metrics.service';
+import { GatewayUnavailableException } from 'src/gateway/exceptions/gateway-unavailable.exception';
+import { PaymentsService } from 'src/payments/payments.service';
 
 @Injectable()
 export class PaymentConsumerService implements OnModuleInit {
@@ -13,6 +15,7 @@ export class PaymentConsumerService implements OnModuleInit {
     private readonly paymentQueueService: PaymentQueueService,
     private readonly rabbitMQService: RabbitmqService,
     private readonly metricsService: MetricsService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   async onModuleInit() {
@@ -47,7 +50,9 @@ export class PaymentConsumerService implements OnModuleInit {
     }
   }
 
-  private processPaymentOrder(message: PaymentOrderMessage): void {
+  private async processPaymentOrder(
+    message: PaymentOrderMessage,
+  ): Promise<void> {
     const startTime = Date.now();
     try {
       // Log inicial com informações da mensagem
@@ -58,26 +63,29 @@ export class PaymentConsumerService implements OnModuleInit {
           `amount=${message.amount}`,
       );
 
-      // Validar mensagem antes de processar
-      if (!validatePaymentOrderMessage(message)) {
-        this.logger.error('❌ Invalid payment message received');
-        // Rejeitamos a mensagem para não ficar reprocessando
+      const validation = validatePaymentOrderMessage(message);
+      if (!validation.valid) {
+        this.logger.error(
+          `❌ Invalid payment message received: ${validation.error ?? 'unknown'}`,
+        );
         throw new Error('Invalid payment message received');
       }
 
-      // TODO: Processar pagamento usando PaymentsService
-      // Isso será implementado na próxima aula
-      this.logger.log('✅ Payment order received and validated');
+      await this.paymentsService.processPayment(message);
+      this.logger.log('✅ Payment order processed');
       this.metricsService.updateMetrics(true, startTime);
     } catch (error) {
       this.metricsService.updateMetrics(false, startTime);
-      // Log de erro com contexto completo
+      if (error instanceof GatewayUnavailableException) {
+        this.logger.warn(
+          `Gateway indisponível para orderId=${message.orderId}; mensagem será retentada`,
+        );
+        throw error;
+      }
       this.logger.error(
         `❌ Failed to process payment for order ${message.orderId}:`,
         error,
       );
-
-      // IMPORTANTE: Relançamos o erro para o RabbitMQ fazer NACK
       throw error;
     }
   }

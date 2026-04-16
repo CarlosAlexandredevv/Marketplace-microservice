@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config';
 import { EventsModule } from './events/events.module';
 import { MetricsModule } from './events/metrics/metrics.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { MetricsModule } from './events/metrics/metrics.module';
       envFilePath: '.env',
     }),
     TypeOrmModule.forRoot(databaseConfig),
+    PaymentsModule,
     EventsModule,
     MetricsModule,
   ],

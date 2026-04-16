@@ -3,7 +3,9 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+  });
 
   app.enableCors();
 
@@ -20,4 +22,4 @@ async function bootstrap() {
 
   console.log(`💳 Payments Service running on port ${port}`);
 }
-bootstrap();
+void bootstrap();
