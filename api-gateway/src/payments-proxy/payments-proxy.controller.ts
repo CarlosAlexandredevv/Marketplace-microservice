@@ -11,6 +11,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/guards/auth.guard';
@@ -34,6 +35,9 @@ export class PaymentsProxyController {
     summary: 'Consulta pagamento por orderId (proxy para payments-service)',
   })
   @ApiParam({ name: 'orderId', format: 'uuid' })
+  @ApiResponse({ status: 200, description: 'Pagamento retornado com sucesso' })
+  @ApiResponse({ status: 401, description: 'Token JWT ausente ou inválido' })
+  @ApiResponse({ status: 404, description: 'Pagamento não encontrado para o pedido' })
   getPaymentByOrderId(
     @Param('orderId', ParseUUIDPipe) orderId: string,
     @Req() req: Request,

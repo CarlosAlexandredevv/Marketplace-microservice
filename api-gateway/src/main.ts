@@ -105,12 +105,15 @@ async function bootstrap() {
       },
       'session-auth',
     )
+    .addTag('System', 'Endpoints básicos de disponibilidade do gateway')
     .addTag('Authentication', 'Endpoints para autenticação e autorização')
     .addTag('Users', 'Endpoints para gestão de usuários')
     .addTag('Products', 'Endpoints para catálogo de produtos')
-    .addTag('Checkout', 'Endpoints para carrinho e pedidos')
+    .addTag('Cart', 'Endpoints para operações de carrinho')
+    .addTag('Orders', 'Endpoints para checkout e pedidos')
     .addTag('Payments', 'Endpoints para processamento de pagamentos')
     .addTag('Health', 'Endpoints para monitoramento de saúde')
+    .addTag('Metrics', 'Endpoints de observabilidade e métricas Prometheus')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

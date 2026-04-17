@@ -1,4 +1,6 @@
 import {
+  HttpCode,
+  HttpStatus,
   Body,
   Controller,
   Get,
@@ -6,10 +8,16 @@ import {
   Post,
   Req,
   Res,
-  HttpStatus,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ProxyService } from 'src/proxy/service/proxy.service';
 
 @ApiTags('Products')
@@ -19,6 +27,7 @@ export class ProductsProxyController {
 
   @Get()
   @ApiOperation({ summary: 'Lista catálogo de produtos (proxy)' })
+  @ApiResponse({ status: 200, description: 'Lista de produtos retornada' })
   async findAll(@Req() req: Request) {
     const auth = req.headers.authorization;
     return this.proxyService.proxyRequest(
@@ -32,6 +41,8 @@ export class ProductsProxyController {
 
   @Get('seller/:sellerId')
   @ApiOperation({ summary: 'Lista produtos por seller (proxy)' })
+  @ApiParam({ name: 'sellerId', format: 'uuid' })
+  @ApiResponse({ status: 200, description: 'Lista de produtos do seller retornada' })
   async findBySeller(@Param('sellerId') sellerId: string, @Req() req: Request) {
     const auth = req.headers.authorization;
     return this.proxyService.proxyRequest(
@@ -45,6 +56,9 @@ export class ProductsProxyController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Busca produto por ID (proxy)' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiResponse({ status: 200, description: 'Produto encontrado' })
+  @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   async findById(@Param('id') id: string, @Req() req: Request) {
     const auth = req.headers.authorization;
     return this.proxyService.proxyRequest(
@@ -57,8 +71,24 @@ export class ProductsProxyController {
   }
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Cria produto (proxy)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['name', 'description', 'price', 'stock'],
+      properties: {
+        name: { type: 'string', maxLength: 255, example: 'Notebook Gamer' },
+        description: { type: 'string', example: 'Notebook com 16GB RAM e SSD' },
+        price: { type: 'number', example: 5299.9, minimum: 0.01 },
+        stock: { type: 'integer', example: 10, minimum: 0 },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Produto criado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Payload inválido' })
+  @ApiResponse({ status: 401, description: 'Token JWT ausente ou inválido' })
   async create(
     @Body() payload: unknown,
     @Req() req: Request,

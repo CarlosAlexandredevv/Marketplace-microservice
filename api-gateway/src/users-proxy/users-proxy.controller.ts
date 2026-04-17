@@ -11,6 +11,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/guards/auth.guard';
@@ -31,6 +32,8 @@ export class UsersProxyController {
 
   @Get('profile')
   @ApiOperation({ summary: 'Perfil do utilizador (proxy para users-service)' })
+  @ApiResponse({ status: 200, description: 'Perfil retornado com sucesso' })
+  @ApiResponse({ status: 401, description: 'Token JWT ausente ou inválido' })
   profile(@Req() req: Request) {
     const user = req.user as GatewayJwtUser;
     const auth = req.headers.authorization;
@@ -50,6 +53,11 @@ export class UsersProxyController {
 
   @Get('sellers')
   @ApiOperation({ summary: 'Sellers ativos (proxy para users-service)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de sellers ativos retornada',
+  })
+  @ApiResponse({ status: 401, description: 'Token JWT ausente ou inválido' })
   sellers(@Req() req: Request) {
     const user = req.user as GatewayJwtUser;
     const auth = req.headers.authorization;
@@ -70,6 +78,9 @@ export class UsersProxyController {
   @Get(':id')
   @ApiOperation({ summary: 'Utilizador por ID (proxy para users-service)' })
   @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiResponse({ status: 200, description: 'Usuário encontrado' })
+  @ApiResponse({ status: 401, description: 'Token JWT ausente ou inválido' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
   findOne(@Param('id', ParseUUIDPipe) id: string, @Req() req: Request) {
     const user = req.user as GatewayJwtUser;
     const auth = req.headers.authorization;
