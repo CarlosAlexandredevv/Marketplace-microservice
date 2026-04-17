@@ -37,7 +37,10 @@ export class PaymentsProxyController {
   @ApiParam({ name: 'orderId', format: 'uuid' })
   @ApiResponse({ status: 200, description: 'Pagamento retornado com sucesso' })
   @ApiResponse({ status: 401, description: 'Token JWT ausente ou inválido' })
-  @ApiResponse({ status: 404, description: 'Pagamento não encontrado para o pedido' })
+  @ApiResponse({
+    status: 404,
+    description: 'Pagamento não encontrado para o pedido',
+  })
   getPaymentByOrderId(
     @Param('orderId', ParseUUIDPipe) orderId: string,
     @Req() req: Request,

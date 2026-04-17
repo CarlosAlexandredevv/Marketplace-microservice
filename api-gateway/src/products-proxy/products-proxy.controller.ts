@@ -42,7 +42,10 @@ export class ProductsProxyController {
   @Get('seller/:sellerId')
   @ApiOperation({ summary: 'Lista produtos por seller (proxy)' })
   @ApiParam({ name: 'sellerId', format: 'uuid' })
-  @ApiResponse({ status: 200, description: 'Lista de produtos do seller retornada' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de produtos do seller retornada',
+  })
   async findBySeller(@Param('sellerId') sellerId: string, @Req() req: Request) {
     const auth = req.headers.authorization;
     return this.proxyService.proxyRequest(

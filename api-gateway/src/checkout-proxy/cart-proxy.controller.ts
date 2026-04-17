@@ -76,7 +76,10 @@ export class CartProxyController {
   @Delete('items/:itemId')
   @ApiOperation({ summary: 'Remove item do carrinho (proxy)' })
   @ApiParam({ name: 'itemId', format: 'uuid' })
-  @ApiResponse({ status: 200, description: 'Carrinho atualizado após remoção do item' })
+  @ApiResponse({
+    status: 200,
+    description: 'Carrinho atualizado após remoção do item',
+  })
   @ApiResponse({ status: 401, description: 'Token JWT ausente ou inválido' })
   @ApiResponse({ status: 404, description: 'Item do carrinho não encontrado' })
   removeItem(

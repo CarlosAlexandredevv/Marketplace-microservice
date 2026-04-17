@@ -43,7 +43,10 @@ export class OrdersProxyController {
     },
   })
   @ApiResponse({ status: 201, description: 'Pedido criado com sucesso' })
-  @ApiResponse({ status: 400, description: 'Carrinho vazio ou payload inválido' })
+  @ApiResponse({
+    status: 400,
+    description: 'Carrinho vazio ou payload inválido',
+  })
   @ApiResponse({ status: 401, description: 'Token JWT ausente ou inválido' })
   checkout(@Body() payload: unknown, @Req() req: Request) {
     const auth = req.headers.authorization;
