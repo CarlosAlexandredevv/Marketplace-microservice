@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,7 +13,7 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
           styleSrc: ["'self'", "'unsafe-inline'"],
           imgSrc: ["'self'", "'data:'", "'https:'"],
         },
@@ -113,18 +114,22 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document, {
-    swaggerOptions: {},
-    customSiteTitle: 'Marketplace API Gateway Documentation',
-    customCss: `
-        .swagger-ui .topbar { display: none }
-        .swagger-ui .info .title { color: #3b82f6 }
-      `,
-  });
+  app.use(
+    '/api',
+    apiReference({
+      pageTitle: 'Marketplace API Gateway Documentation',
+      content: document,
+      theme: 'saturn',
+      layout: 'modern',
+      withDefaultFonts: false,
+    }),
+  );
 
   const port = process.env.PORT ?? 3005;
   await app.listen(port);
   console.log(`Server is running on port ${port}`);
-  console.log(`Swagger is running on port <http://localhost:${port}/api>`);
+  console.log(
+    `Scalar API Reference is running on port <http://localhost:${port}/api>`,
+  );
 }
 bootstrap();
